@@ -1,6 +1,7 @@
 import datetime
+from typing import Dict
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 import psycopg2
@@ -44,7 +45,7 @@ def get_indicators():
     try:
         cur.execute("SELECT * FROM updates WHERE updated >= %s", [one_month_ago])
     except psycopg2.Error as e:
-        return JSONResponse(status_code=400, content={"message": "Database error: " + str(e)})
+        raise HTTPException(status_code=400, detail=f"Database error: {str(e)}")
 
     results = cur.fetchall()
     conn.close()
@@ -61,8 +62,8 @@ def get_indicators():
     return indicators
 
 
-@app.post("/tracking-progress/v1/indicators")
-def add_indicator(indicator: Indicator) -> JSONResponse:
+@app.post("/tracking-progress/v1/indicators", status_code=201)
+def add_indicator(indicator: Indicator) -> Dict:
     """Add updated indicator."""
 
     conn = make_connection()
@@ -70,12 +71,10 @@ def add_indicator(indicator: Indicator) -> JSONResponse:
     try:
         cur.execute("INSERT INTO updates (indicator) VALUES (%s)", [indicator.name])
     except psycopg2.Error as e:
-        return JSONResponse(status_code=400, content={"message": "Database error: " + str(e)})
+        raise HTTPException(status_code=400, detail=f"Database error: {str(e)}")
 
     if cur.statusmessage != "INSERT 0 1":
-        return JSONResponse(
-            status_code=400, content={"message": "Error inserting indicator, contact developer."},
-        )
+        raise HTTPException(status_code=400, detail="Error inserting indicator, contact developer.")
     conn.commit()
     conn.close()
-    return JSONResponse(status_code=200, content={"message": "success"})
+    return {"message": "success"}
