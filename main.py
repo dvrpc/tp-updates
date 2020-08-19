@@ -3,11 +3,18 @@ from typing import List
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 import psycopg2
+from pydantic import BaseModel
 
 from config import PSQL_CREDS
 
-app = FastAPI()
+
+class Indicator(BaseModel):
+    name: str
+
+
+app = FastAPI(title="Tracking Progress Updates API")
 
 app.add_middleware(
     CORSMiddleware,
@@ -18,21 +25,26 @@ app.add_middleware(
 )
 
 
-def get_db_cursor():
+def make_connection():
     connection = psycopg2.connect(PSQL_CREDS)
-    return connection.cursor()
+    return connection
 
 
 @app.get("/indicators")
-def get_indicators() -> List[str]:
+def get_indicators():
     """Return list of all indicators that have been updated in past 30 days."""
 
     one_month_ago = datetime.date.today() - datetime.timedelta(days=30)
 
-    query = "SELECT * FROM updates WHERE updated >= %s"
-    cur = get_db_cursor()
-    cur.execute(query, [one_month_ago])
+    conn = make_connection()
+    cur = conn.cursor()
+    try:
+        cur.execute("SELECT * FROM updates WHERE updated >= %s", [one_month_ago])
+    except psycopg2.Error as e:
+        return JSONResponse(status_code=400, content={"message": "Database error: " + str(e)})
+
     results = cur.fetchall()
+    conn.close()
 
     if not results:
         return []
@@ -47,7 +59,20 @@ def get_indicators() -> List[str]:
 
 
 @app.post("/indicators")
-def add_indicator(name: str):
+def add_indicator(indicator: Indicator) -> JSONResponse:
     """Add updated indicator."""
-    cur = get_db_cursor()
-    pass
+
+    conn = make_connection()
+    cur = conn.cursor()
+    try:
+        cur.execute("INSERT INTO updates (indicator) VALUES (%s)", [indicator.name])
+    except psycopg2.Error as e:
+        return JSONResponse(status_code=400, content={"message": "Database error: " + str(e)})
+
+    if cur.statusmessage != "INSERT 0 1":
+        return JSONResponse(
+            status_code=400, content={"message": "Error inserting indicator, contact developer."},
+        )
+    conn.commit()
+    conn.close()
+    return JSONResponse(status_code=200, content={"message": "success"})
