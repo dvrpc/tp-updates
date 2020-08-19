@@ -1,5 +1,4 @@
 import datetime
-from typing import List
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -14,7 +13,11 @@ class Indicator(BaseModel):
     name: str
 
 
-app = FastAPI(title="Tracking Progress Updates API")
+app = FastAPI(
+    title="Tracking Progress Updates API",
+    openapi_url="/tracking-progress/v1/openapi.json",
+    docs_url="/tracking-progress/v1/docs",
+)
 
 app.add_middleware(
     CORSMiddleware,
@@ -30,7 +33,7 @@ def make_connection():
     return connection
 
 
-@app.get("/indicators")
+@app.get("/tracking-progress/v1/indicators")
 def get_indicators():
     """Return list of all indicators that have been updated in past 30 days."""
 
@@ -58,7 +61,7 @@ def get_indicators():
     return indicators
 
 
-@app.post("/indicators")
+@app.post("/tracking-progress/v1/indicators")
 def add_indicator(indicator: Indicator) -> JSONResponse:
     """Add updated indicator."""
 
