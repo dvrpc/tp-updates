@@ -1,5 +1,5 @@
 import datetime
-from typing import Dict
+from typing import Dict, List
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -12,6 +12,10 @@ from config import PSQL_CREDS
 
 class Indicator(BaseModel):
     name: str
+
+
+class Message(BaseModel):
+    message: str
 
 
 app = FastAPI(
@@ -34,7 +38,10 @@ def make_connection():
     return connection
 
 
-@app.get("/tracking-progress/v1/indicators")
+@app.get(
+    "/tracking-progress/v1/indicators",
+    responses={500: {"model": Message, "description": "Internal Server Error"}},
+)
 def get_indicators():
     """Return list of all indicators that have been updated in past 30 days."""
 
@@ -45,7 +52,7 @@ def get_indicators():
     try:
         cur.execute("SELECT * FROM updates WHERE updated >= %s", [one_month_ago])
     except psycopg2.Error as e:
-        raise HTTPException(status_code=400, detail=f"Database error: {str(e)}")
+        return JSONResponse(status_code=500, content={"message": "Database error: " + str(e)})
 
     results = cur.fetchall()
     conn.close()
@@ -62,8 +69,12 @@ def get_indicators():
     return indicators
 
 
-@app.post("/tracking-progress/v1/indicators", status_code=201)
-def add_indicator(indicator: Indicator) -> Dict:
+@app.post(
+    "/tracking-progress/v1/indicators",
+    responses={500: {"model": Message, "description": "Internal Server Error"}},
+    status_code=201,
+)
+def add_indicator(indicator: Indicator):
     """Add updated indicator."""
 
     conn = make_connection()
@@ -71,10 +82,12 @@ def add_indicator(indicator: Indicator) -> Dict:
     try:
         cur.execute("INSERT INTO updates (indicator) VALUES (%s)", [indicator.name])
     except psycopg2.Error as e:
-        raise HTTPException(status_code=400, detail=f"Database error: {str(e)}")
+        return JSONResponse(status_code=500, content={"message": "Database error: " + str(e)})
 
     if cur.statusmessage != "INSERT 0 1":
-        raise HTTPException(status_code=400, detail="Error inserting indicator, contact developer.")
+        return JSONResponse(
+            status_code=500, content={"message": "Error inserting indicator, contact developer."}
+        )
     conn.commit()
     conn.close()
     return {"message": "success"}
