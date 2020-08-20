@@ -1,7 +1,7 @@
 import datetime
 from typing import Dict, List
 
-from fastapi import FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 import psycopg2
@@ -33,21 +33,21 @@ app.add_middleware(
 )
 
 
-def make_connection():
-    connection = psycopg2.connect(PSQL_CREDS)
-    return connection
+def get_conn():
+    """Connect to database, yield it, close it."""
+    conn = psycopg2.connect(PSQL_CREDS)
+    yield conn
+    conn.close()
 
 
 @app.get(
     "/tracking-progress/v1/indicators",
     responses={500: {"model": Message, "description": "Internal Server Error"}},
 )
-def get_indicators():
+def get_indicators(conn=Depends(get_conn)):
     """Return list of all indicators that have been updated in past 30 days."""
-
     one_month_ago = datetime.date.today() - datetime.timedelta(days=30)
 
-    conn = make_connection()
     cur = conn.cursor()
     try:
         cur.execute("SELECT * FROM updates WHERE updated >= %s", [one_month_ago])
@@ -55,7 +55,6 @@ def get_indicators():
         return JSONResponse(status_code=500, content={"message": "Database error: " + str(e)})
 
     results = cur.fetchall()
-    conn.close()
 
     if not results:
         return []
@@ -74,10 +73,8 @@ def get_indicators():
     responses={500: {"model": Message, "description": "Internal Server Error"}},
     status_code=201,
 )
-def add_indicator(indicator: Indicator):
+def add_indicator(indicator: Indicator, conn=Depends(get_conn)):
     """Add updated indicator."""
-
-    conn = make_connection()
     cur = conn.cursor()
     try:
         cur.execute("INSERT INTO updates (indicator) VALUES (%s)", [indicator.name])
@@ -89,5 +86,4 @@ def add_indicator(indicator: Indicator):
             status_code=500, content={"message": "Error inserting indicator, contact developer."}
         )
     conn.commit()
-    conn.close()
     return {"message": "success"}
