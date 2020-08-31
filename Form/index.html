@@ -1,0 +1,104 @@
+<!DOCTYPE html> 
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Intranet > Tracking Progress Updates Form</title>
+    <meta name="created" content="2020-08">
+    <meta name="author" content="Delaware Valley Regional Planning Commission (DVRPC)" >
+	<meta name="owner" content="webmaster@dvrpc.org" >
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="./css/index.css">
+    <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin>
+    <link href="https://fonts.googleapis.com/css?family=IBM+Plex+Sans:100,100i,400,400i,700,700i" rel="stylesheet">
+    <script defer src="./js/index.js" type="module"></script>
+</head>
+<body>
+    <nav>
+        <div id="nav-content-wrapper">
+            <a href="http://intranet.dvrpc.org/">Intranet</a>
+            <a href="https://www.dvrpc.org/">
+                <img src="https://www.dvrpc.org/img/homepage/logo_small30px.png" alt="logo" />
+            </a>
+        </div>
+    </nav>
+
+    <main>
+        <section class="sections" id="instructions">
+            <h1 id="header">Tracking Progress Updates</h1>
+
+            <h2 id="instructions-intro">Add an overlay to indicator tiles to let users know they have recently been updated with new data.</h2>
+            
+            <ul>
+                <li>Use the "Add" form to add an overlay for a newly updated indicator. These overlays expire 30 days after creation.</li>
+                <li>Use the "Remove" form if you want to remove an overlay before the 30 day expiration date. In case of data rollbacks or otherwise.</li>
+            </ul>
+        </section>
+
+        <section class="sections" id="forms">
+            <form id="add-indicator">
+                <label>
+                    <strong id="add-strong">Add:</strong>
+                    <select name="add-indicator-select">
+                        <option value="Air-Quality">Air Quality</option>
+                        <option value="Bridge-Conditions">Bridge Conditions</option>
+                        <option value="Commute-Mode">Commute Mode</option>
+                        <option value="Congestion">Congestion</option>
+                        <option value="Educational-Attainment">Educational Attainment</option>
+                        <option value="Exported-Goods">Exported Goods</option>
+                        <option value="Global-Connectivity">Global Connectivity</option>
+                        <option value="Greenhouse-Gas-Emissions">Greenhouse Gas Emissions</option>
+                        <option value="Housing-Activity">Housing Activity</option>
+                        <option value="Housing-Affordability">Housing Affordability</option>
+                        <option value="Income-Disparities">Income Disparities</option>
+                        <option value="Innovation">Innovation</option>
+                        <option value="Job-Growth">Job Growth</option>
+                        <option value="Land-Consumption">Land Consumption</option>
+                        <option value="Miles-Driven">Miles Driven</option>
+                        <option value="Pavement-Conditions">Pavement Conditions</option>
+                        <option value="Population-Growth">Population Growth</option>
+                        <option value="Racial-&-Ethnic-Disparities">Racial & Ethnic Disparities</option>
+                        <option value="Roadway-Safety">Roadway Safety</option>
+                        <option value="Sex-Disparities">Sex Disparities</option>
+                        <option value="Transit-Conditions">Transit Conditions</option>
+                        <option value="Transit-Ridership">Transit Ridership</option>
+                        <option value="Water-Quality">Water Quality</option>
+                    </select>
+                </label>
+                <button type="submit" id="add-indicator-btn">Add Update</button>
+            </form>
+
+            <form id="remove-indicator">
+                <label>
+                    <strong id="remove-strong">Remove:</strong>
+                    <select name="remove-indicator-select">
+                        <option value="Air-Quality">Air Quality</option>
+                        <option value="Bridge-Conditions">Bridge Conditions</option>
+                        <option value="Commute-Mode">Commute Mode</option>
+                        <option value="Congestion">Congestion</option>
+                        <option value="Educational-Attainment">Educational Attainment</option>
+                        <option value="Exported-Goods">Exported Goods</option>
+                        <option value="Global-Connectivity">Global Connectivity</option>
+                        <option value="Greenhouse-Gas-Emissions">Greenhouse Gas Emissions</option>
+                        <option value="Housing-Activity">Housing Activity</option>
+                        <option value="Housing-Affordability">Housing Affordability</option>
+                        <option value="Income-Disparities">Income Disparities</option>
+                        <option value="Innovation">Innovation</option>
+                        <option value="Job-Growth">Job Growth</option>
+                        <option value="Land-Consumption">Land Consumption</option>
+                        <option value="Miles-Driven">Miles Driven</option>
+                        <option value="Pavement-Conditions">Pavement Conditions</option>
+                        <option value="Population-Growth">Population Growth</option>
+                        <option value="Racial-&-Ethnic-Disparities">Racial & Ethnic Disparities</option>
+                        <option value="Roadway-Safety">Roadway Safety</option>
+                        <option value="Sex-Disparities">Sex Disparities</option>
+                        <option value="Transit-Conditions">Transit Conditions</option>
+                        <option value="Transit-Ridership">Transit Ridership</option>
+                        <option value="Water-Quality">Water Quality</option>
+                    </select>
+                </label>
+                <button type="submit" id="remove-indicator-btn">Remove Update</button>
+            </form>
+        </section>
+    </main>
+</body>
+</html>
