@@ -1,5 +1,10 @@
+"""
+Testing the endpoints.
+Note that this requires the db referenced in PSQL_CREDS_TEST_DB to be set up separately.
+"""
 import datetime
 
+from fastapi import Depends
 from fastapi.testclient import TestClient
 import psycopg2
 import pytest
@@ -12,15 +17,14 @@ ENDPOINT = "/tracking-progress/v1/indicators"
 
 @pytest.fixture
 def client():
+    """Test app."""
     client = TestClient(app)
     return client
 
 
-def get_test_conn():
-    """Set up testing database, yielding the connection.
-
-    Note that this requires the db in PSQL_CREDS_TEST_DB to be set up separately.
-    """
+@pytest.fixture
+def test_db():
+    """Insert and then delete records so we are always working with the same data."""
     conn = psycopg2.connect(PSQL_CREDS_TEST_DB)
     cur = conn.cursor()
     cur.execute("INSERT INTO updates (indicator) VALUES ('indicator1')")
@@ -35,19 +39,31 @@ def get_test_conn():
     cur.execute("UPDATE updates SET updated = %s WHERE indicator = 'indicator4'", [two_months_ago])
     cur.execute("UPDATE updates SET updated = %s WHERE indicator = 'indicator5'", [two_months_ago])
     cur.execute("UPDATE updates SET updated = %s WHERE indicator = 'indicator6'", [two_months_ago])
-
-    yield conn
-
     conn.commit()
-    conn.close()
+
+    try:
+        yield
+    finally:
+        cur.execute("DELETE FROM updates")
+        conn.commit()
+        conn.close()
 
 
-def clear_db():
+def get_test_conn():
+    """Provide a separate connection to the test db, outside of the insert/delete conn above.
+
+    Each endpoint uses a db connection as a depenency. For testing, that db dependency is
+    overwritten with this one, through the app.dependency statement below.
+
+    The primary use of this is to be able to examine db changes (that occur between the insertion
+    and deletion of records made by the test_db fixture) made by the tests.
+    """
     conn = psycopg2.connect(PSQL_CREDS_TEST_DB)
-    cur = conn.cursor()
-    cur.execute("DELETE FROM updates")
-    conn.commit()
-    conn.close()
+
+    try:
+        yield conn
+    finally:
+        conn.close()
 
 
 # use the test database for all tests
@@ -58,7 +74,7 @@ app.dependency_overrides[get_conn] = get_test_conn
 # GET ENDPOINT
 
 
-def test_get_success(client):
+def test_get_success(client, test_db):
     response = client.get(ENDPOINT)
     assert response.status_code == 200
 
@@ -69,10 +85,11 @@ def test_get_returns_list(client):
     assert isinstance(data, list)
 
 
-def test_test_db_setup(client):
+def test_test_db(client, test_db):
     """Check that we can connect to test db and that it is set up properly."""
-    cur = next(get_test_conn()).cursor()  # get the conn out of generator, then the cursor
-    cur.execute("SELECT * from updates")
+    conn = get_test_conn()
+    cur = next(conn).cursor()
+    cur.execute("SELECT * FROM updates")
     results = cur.fetchall()
     indicators = {}
     for row in results:
@@ -82,7 +99,7 @@ def test_test_db_setup(client):
     assert indicators["indicator4"] == datetime.date.today() - datetime.timedelta(days=60)
 
 
-def test_get_returns_correct_number_of_indicators(client):
+def test_get_returns_correct_number_of_indicators(client, test_db):
     response = client.get(ENDPOINT)
     data = response.json()
     assert len(data) == 3
@@ -91,20 +108,35 @@ def test_get_returns_correct_number_of_indicators(client):
 ###############
 # POST ENDPOINT
 
-# all post tests need to clear the database afterwords, because it's not in the function for it
-# since we sometimes want to then query the database to confirm insert
 
-
-def test_success_message_returned_after_adding_indicator(client):
+def test_success_message_returned_after_adding_indicator(client, test_db):
     response = client.post(ENDPOINT, json={"name": "indicator7"})
     data = response.json()
-    clear_db()
     assert data["message"] == "success"
 
 
-def test_verify_indicator_added_to_db(client):
+def test_verify_indicator_added_to_db(client, test_db):
     client.post(ENDPOINT, json={"name": "indicator7"})
     response = client.get(ENDPOINT)
     data = response.json()
-    clear_db()
     assert len(data) == 4
+
+
+#################
+# DELETE ENDPOINT
+
+
+def test_success_message_after_deleting_indicator(client, test_db):
+    response_delete = client.delete(ENDPOINT, json={"name": "indicator1"})
+    data_delete = response_delete.json()
+    response_get = client.get(ENDPOINT)
+    data_get = response_get.json()
+    assert data_delete["message"] == "success"
+    assert len(data_get) == 2
+
+
+def test_attempt_deletion_of_indicator_not_in_db_returns_error_message(client, test_db):
+    response = client.delete(ENDPOINT, json={"name": "not a valid indicator name"})
+    data = response.json()
+    assert response.status_code == 404
+    assert data["message"] == "No indicator with that name found; not deleted."
