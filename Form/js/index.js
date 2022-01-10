@@ -18,7 +18,7 @@ const addIndicator = async body => {
     const options = makeOptions('POST', body)
 
     try {
-        const stream = await fetch('http://10.1.1.76/tracking-progress/v1/indicators/', options)
+        const stream = await fetch('http://linux2.dvrpc.org/tracking-progress/v1/indicators/', options)
         if(stream.ok) alert('Indicator successfully added to update list.')
     }catch(error) {
         alert('Failed to add indicator due to: ', error)
@@ -28,7 +28,7 @@ const removeIndicator = async body => {
     const options = makeOptions('DELETE', body)
 
     try {
-        const stream = await fetch('http://10.1.1.76/tracking-progress/v1/indicators/', options)
+        const stream = await fetch('http://linux2.dvrpc.org/tracking-progress/v1/indicators/', options)
         if(stream.ok) alert('Indicator successfully removed from update list.')
     }catch(error) {
         alert('Failed to remove indicator due to: ', error)
