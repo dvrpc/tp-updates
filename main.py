@@ -36,7 +36,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost", "http://intranet.dvrpc.org"],
     allow_credentials=True,
-    allow_methods=["GET", "POST"],
+    allow_methods=["GET", "POST", "DELETE"],
     allow_headers=["*"],
 )
 
