@@ -8,11 +8,12 @@ a:visited{
     color: #25283d;
 }
 h1{
-    font-size: 2rem;
+    font-size: 2.5rem;
     text-align: center;
 }
 hr {
-    width: 70%;
+    width: 90%;
+    margin: 5% 0;
 }
 form, label{
     font-family: 'IBM Plex Sans', sans-serif;
@@ -22,10 +23,11 @@ form, label{
     align-items: center;
 }
 form{
-    width: 80%;
+    min-width: max-content;
+    width: 90%;
 }
 label{
-    width: 55%;
+    width: 30ch;
 }
 button, select{
     font-family: 'IBM Plex Sans', sans-serif;
@@ -33,9 +35,10 @@ button, select{
     border-radius: 5px;
     cursor: pointer;
     padding: 9px 12px;
+    background-color: white;
 }
 button{
-    background: transparent;
+    min-width: 16ch;
 }
 button:hover{
     color: #f7f7f7;
@@ -88,8 +91,9 @@ main{
 #instructions-intro{
     font-size: 1.4rem;
     font-weight: 500;
-    text-align: center;
-    margin: 0;
+    margin: 2.5% auto;
+    line-height: 1.25;
+    max-width: 28em;
 }
 ul{
     font-size: 1.2rem;
@@ -100,11 +104,17 @@ li{
 
 
 /* Forms */
-#forms{
+.main-column {
     width: 50%;
+    background-color: #ecebe4;
+    padding: 0 2%;
+}
+.main-content{
+    width: 85%;
     align-items: center;
     justify-content: center;
     background: #ecebe4;
+    margin: 0 auto;
     overflow-y: auto;
 }
 #add-strong{
@@ -116,9 +126,32 @@ li{
 #add-indicator{
     margin-bottom: 3%;
 }
+.add-indicator-form-ctrl {
+    border-color: #4fa3a8;
+}
+.remove-indicator-form-ctrl {
+    border-color: #bd2556;
+}
 #add-indicator-btn:hover{
     background: #4fa3a8;
 }
 #remove-indicator-btn:hover{
     background: #bd2556;
+}
+
+
+/* List of Jawns */
+.active-header {
+    margin-top: 0;
+    text-align: center;
+    align-self: center;
+}
+.active-list {
+    width: 90%;
+    max-height: 200px;
+    margin: 0 auto;
+    overflow-y: auto;
+}
+.empty-list-item {
+    list-style-type: none;
 }
