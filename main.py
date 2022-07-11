@@ -34,7 +34,13 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost", "http://intranet.dvrpc.org"],
+    allow_origins=[
+        "http://localhost",
+        "http://intranet.dvrpc.org",
+        "http://staging.dvrpc.org",
+        "https://dvrpc.org",
+        "https://www.dvrpc.org",
+    ],
     allow_credentials=True,
     allow_methods=["GET", "POST", "DELETE"],
     allow_headers=["*"],
