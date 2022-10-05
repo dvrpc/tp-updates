@@ -9,13 +9,13 @@ a UI element on the indicator to represent that.
 """
 import datetime
 
-from fastapi import Depends, FastAPI
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-import psycopg2
+import psycopg
 from pydantic import BaseModel
 
-from config import PSQL_CREDS
+from config import PG_CREDS
 
 
 class Indicator(BaseModel):
@@ -47,30 +47,21 @@ app.add_middleware(
 )
 
 
-def get_conn():
-    """Connect to database, yield it, close it."""
-    conn = psycopg2.connect(PSQL_CREDS)
-    try:
-        yield conn
-    finally:
-        conn.close()
-
-
 @app.get(
     "/tracking-progress/v1/indicators",
     responses={500: {"model": Message, "description": "Internal Server Error"}},
 )
-def get_indicators(conn=Depends(get_conn)):
+def get_indicators():
     """Return list of all indicators that have been updated in past 30 days."""
     one_month_ago = datetime.date.today() - datetime.timedelta(days=30)
 
-    cur = conn.cursor()
     try:
-        cur.execute("SELECT * FROM updates WHERE updated >= %s", [one_month_ago])
-    except psycopg2.Error as e:
+        with psycopg.connect(PG_CREDS) as conn:
+            results = conn.execute(
+                "SELECT * FROM updates WHERE updated >= %s", [one_month_ago]
+            ).fetchall()
+    except psycopg.Error as e:
         return JSONResponse(status_code=500, content={"message": "Database error: " + str(e)})
-
-    results = cur.fetchall()
 
     if not results:
         return []
@@ -79,9 +70,7 @@ def get_indicators(conn=Depends(get_conn)):
     for row in results:
         indicators.append(row[1])
 
-    indicators = list(set(indicators))
-
-    return indicators
+    return list(set(indicators))
 
 
 @app.post(
@@ -89,12 +78,13 @@ def get_indicators(conn=Depends(get_conn)):
     responses={500: {"model": Message, "description": "Internal Server Error"}},
     status_code=201,
 )
-def add_indicator(indicator: Indicator, conn=Depends(get_conn)):
+def add_indicator(indicator: Indicator):
     """Add updated indicator."""
-    cur = conn.cursor()
     try:
-        cur.execute("INSERT INTO updates (indicator) VALUES (%s)", [indicator.name])
-    except psycopg2.Error as e:
+        with psycopg.connect(PG_CREDS) as conn:
+            cur = conn.execute("INSERT INTO updates (indicator) VALUES (%s)", [indicator.name])
+
+    except psycopg.Error as e:
         return JSONResponse(status_code=500, content={"message": "Database error: " + str(e)})
 
     if cur.statusmessage != "INSERT 0 1":
@@ -102,7 +92,7 @@ def add_indicator(indicator: Indicator, conn=Depends(get_conn)):
             status_code=500,
             content={"message": "Error inserting indicator, contact developer."},
         )
-    conn.commit()
+
     return {"message": "success"}
 
 
@@ -114,13 +104,13 @@ def add_indicator(indicator: Indicator, conn=Depends(get_conn)):
     },
     status_code=200,
 )
-def delete_indicator(indicator: Indicator, conn=Depends(get_conn)):
+def delete_indicator(indicator: Indicator):
     """Delete an updated indicator (in case one was mistakenly added)."""
-    cur = conn.cursor()
 
     try:
-        cur.execute("DELETE FROM updates WHERE indicator = %s", [indicator.name])
-    except psycopg2.Error as e:
+        with psycopg.connect(PG_CREDS) as conn:
+            cur = conn.execute("DELETE FROM updates WHERE indicator = %s", [indicator.name])
+    except psycopg.Error as e:
         return JSONResponse(status_code=500, content={"message": "Database error: " + str(e)})
 
     if "DELETE" in cur.statusmessage:
@@ -129,7 +119,6 @@ def delete_indicator(indicator: Indicator, conn=Depends(get_conn)):
                 status_code=404,
                 content={"message": "No indicator with that name found; not deleted."},
             )
-        conn.commit()
         return JSONResponse(status_code=200, content={"message": "success"})
 
     return JSONResponse(
