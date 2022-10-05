@@ -99,7 +99,8 @@ def add_indicator(indicator: Indicator, conn=Depends(get_conn)):
 
     if cur.statusmessage != "INSERT 0 1":
         return JSONResponse(
-            status_code=500, content={"message": "Error inserting indicator, contact developer."}
+            status_code=500,
+            content={"message": "Error inserting indicator, contact developer."},
         )
     conn.commit()
     return {"message": "success"}
@@ -132,5 +133,6 @@ def delete_indicator(indicator: Indicator, conn=Depends(get_conn)):
         return JSONResponse(status_code=200, content={"message": "success"})
 
     return JSONResponse(
-        status_code=500, content={"message": "Error inserting indicator, contact developer."}
+        status_code=500,
+        content={"message": "Error inserting indicator, contact developer."},
     )
