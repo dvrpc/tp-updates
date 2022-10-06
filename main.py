@@ -9,7 +9,7 @@ a UI element on the indicator to represent that.
 """
 import datetime
 
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 import psycopg
@@ -47,16 +47,26 @@ app.add_middleware(
 )
 
 
+def db():
+    """
+    Create connection to database.
+
+    Using a function so that we can insert it as a dependency, and thus use a different
+    database connection when testing.
+    """
+    return psycopg.connect(PG_CREDS)
+
+
 @app.get(
     "/tracking-progress/v1/indicators",
     responses={500: {"model": Message, "description": "Internal Server Error"}},
 )
-def get_indicators():
+def get_indicators(db=Depends(db)):
     """Return list of all indicators that have been updated in past 30 days."""
     one_month_ago = datetime.date.today() - datetime.timedelta(days=30)
 
     try:
-        with psycopg.connect(PG_CREDS) as conn:
+        with db as conn:
             results = conn.execute(
                 "SELECT * FROM updates WHERE updated >= %s", [one_month_ago]
             ).fetchall()
@@ -78,10 +88,10 @@ def get_indicators():
     responses={500: {"model": Message, "description": "Internal Server Error"}},
     status_code=201,
 )
-def add_indicator(indicator: Indicator):
+def add_indicator(indicator: Indicator, db=Depends(db)):
     """Add updated indicator."""
     try:
-        with psycopg.connect(PG_CREDS) as conn:
+        with db as conn:
             cur = conn.execute("INSERT INTO updates (indicator) VALUES (%s)", [indicator.name])
 
     except psycopg.Error as e:
@@ -104,11 +114,11 @@ def add_indicator(indicator: Indicator):
     },
     status_code=200,
 )
-def delete_indicator(indicator: Indicator):
+def delete_indicator(indicator: Indicator, db=Depends(db)):
     """Delete an updated indicator (in case one was mistakenly added)."""
 
     try:
-        with psycopg.connect(PG_CREDS) as conn:
+        with db as conn:
             cur = conn.execute("DELETE FROM updates WHERE indicator = %s", [indicator.name])
     except psycopg.Error as e:
         return JSONResponse(status_code=500, content={"message": "Database error: " + str(e)})
