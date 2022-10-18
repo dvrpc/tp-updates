@@ -62,6 +62,7 @@ def db():
 @app.get(
     "/tracking-progress/v1/indicators",
     responses={500: {"model": Message, "description": "Internal Server Error"}},
+    response_model=list[str],
 )
 def get_indicators(db=Depends(db)):
     """Return list of all indicators that have been updated in past 30 days."""
@@ -89,6 +90,7 @@ def get_indicators(db=Depends(db)):
     "/tracking-progress/v1/indicators",
     responses={500: {"model": Message, "description": "Internal Server Error"}},
     status_code=201,
+    response_model=Message,
 )
 def add_indicator(indicator: Indicator, db=Depends(db)):
     """Add updated indicator."""
@@ -114,7 +116,7 @@ def add_indicator(indicator: Indicator, db=Depends(db)):
         404: {"model": Message, "description": "Not Found"},
         500: {"model": Message, "description": "Internal Server Error"},
     },
-    status_code=200,
+    response_model=Message,
 )
 def delete_indicator(indicator: Indicator, db=Depends(db)):
     """Delete an updated indicator (in case one was mistakenly added)."""
@@ -131,7 +133,7 @@ def delete_indicator(indicator: Indicator, db=Depends(db)):
                 status_code=404,
                 content={"message": "No indicator with that name found; not deleted."},
             )
-        return JSONResponse(status_code=200, content={"message": "success"})
+        return {"message": "success"}
 
     return JSONResponse(
         status_code=500,
