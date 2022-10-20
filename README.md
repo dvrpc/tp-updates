@@ -10,7 +10,7 @@ See instructions on the front-end form.
 
 ## API
 
-This is a FastAPI API. See docs at http://linux2.dvrpc.org/tracking-progress/v1/docs#/ (intranet).
+This is a FastAPI API. See docs at http://linux3.dvrpc.org/api/tp-updates/v1/docs#/ (intranet).
 
 ### Tests
 
