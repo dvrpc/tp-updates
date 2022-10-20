@@ -26,10 +26,12 @@ class Message(BaseModel):
     message: str
 
 
+PATH = "/api/tp-updates/v1"
+
 app = FastAPI(
     title="Tracking Progress Updates API",
-    openapi_url="/tracking-progress/v1/openapi.json",
-    docs_url="/tracking-progress/v1/docs",
+    openapi_url=PATH + "/openapi.json",
+    docs_url=PATH + "/docs",
 )
 
 app.add_middleware(
@@ -60,7 +62,7 @@ def db():
 
 
 @app.get(
-    "/tracking-progress/v1/indicators",
+    PATH + "/indicators",
     responses={500: {"model": Message, "description": "Internal Server Error"}},
     response_model=list[str],
 )
@@ -87,7 +89,7 @@ def get_indicators(db=Depends(db)):
 
 
 @app.post(
-    "/tracking-progress/v1/indicators",
+    PATH + "/indicators",
     responses={500: {"model": Message, "description": "Internal Server Error"}},
     status_code=201,
     response_model=Message,
@@ -111,7 +113,7 @@ def add_indicator(indicator: Indicator, db=Depends(db)):
 
 
 @app.delete(
-    "/tracking-progress/v1/indicators",
+    PATH + "/indicators",
     responses={
         404: {"model": Message, "description": "Not Found"},
         500: {"model": Message, "description": "Internal Server Error"},
