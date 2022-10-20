@@ -2,7 +2,7 @@
 
 Get, add, or remove names of [Tracking Progress](https://github.com/dvrpc/TrackingProgress) indicators, so that an overlay can optionally be placed on the corresponding indicator tile to notify users when recent updates have been made. For the GET endpoint, only indicators added within the past 30 days will be returned.
 
-See API docs at <http://linux3.dvrpc.org/api/tp-updates/v1/docs#/> (intranet).
+See API docs at <http://linux3.dvrpc.org/api/tp-updates/v1/docs#/> (internal).
 
 The frontend is handled by <https://github.com/dvrpc/tp-updater>.
 
