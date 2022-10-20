@@ -1,16 +1,10 @@
-# Tracking Progress Updates
+# Tracking Progress Updates API
 
-Add an overlay to [Tracking Progress](https://github.com/dvrpc/TrackingProgress) indicator tiles to let users know they have recently been updated with new data. Indicators expire after 30 days.
+Get, add, or remove names of [Tracking Progress](https://github.com/dvrpc/TrackingProgress) indicators, so that an overlay can optionally be placed on the corresponding indicator tile to notify users when recent updates have been made. For the GET endpoint, only indicators added within the past 30 days will be returned.
 
-The API code lives in the root directory, while the code for the front-end form is within the Form/ directory.
+See API docs at <http://linux3.dvrpc.org/api/tp-updates/v1/docs#/> (intranet).
 
-## Making Updates
-
-See instructions on the front-end form.
-
-## API
-
-This is a FastAPI API. See docs at http://linux3.dvrpc.org/api/tp-updates/v1/docs#/ (intranet).
+The frontend is handled by <https://github.com/dvrpc/tp-updater>.
 
 ### Tests
 
