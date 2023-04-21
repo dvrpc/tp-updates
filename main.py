@@ -8,14 +8,18 @@ The GET endpoint returns a list of indicators updated in the past 30 days so the
 a UI element on the indicator to represent that.
 """
 import datetime
+from typing import List
+from typing_extensions import Annotated
+import secrets
 
-from fastapi import Depends, FastAPI
+from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.security import HTTPBasic, HTTPBasicCredentials
 import psycopg
 from pydantic import BaseModel
 
-from config import PG_CREDS
+from config import PG_CREDS, USERNAME, PASSWORD
 
 
 class Indicator(BaseModel):
@@ -50,6 +54,31 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+security = HTTPBasic()
+
+
+def basic_auth(credentials: Annotated[HTTPBasicCredentials, Depends(security)]):
+    """
+    Create a simple verification method using Basic HTTP Authentication.
+    In any HTTP request, use the Basic Auth Authorization header to provide a username and password,
+    which will be validated against the environment variables in config.py.
+    This fn can be used in an endpoint to add authentication to it. See the POST and DELETE
+    endpoints below.
+    """
+    is_correct_username = secrets.compare_digest(
+        credentials.username.encode("utf8"), USERNAME.encode("utf8")
+    )
+    is_correct_password = secrets.compare_digest(
+        credentials.password.encode("utf8"), PASSWORD.encode("utf8")
+    )
+    if not (is_correct_username and is_correct_password):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect email or password",
+            headers={"WWW-Authenticate": "Basic"},
+        )
+    return
+
 
 def db():
     """
@@ -64,7 +93,7 @@ def db():
 @app.get(
     PATH + "/indicators",
     responses={500: {"model": Message, "description": "Internal Server Error"}},
-    response_model=list[str],
+    response_model=List[str],
 )
 def get_indicators(db=Depends(db)):
     """Return list of all indicators that have been updated in past 30 days."""
@@ -94,7 +123,9 @@ def get_indicators(db=Depends(db)):
     status_code=201,
     response_model=Message,
 )
-def add_indicator(indicator: Indicator, db=Depends(db)):
+def add_indicator(
+    username: Annotated[str, Depends(basic_auth)], indicator: Indicator, db=Depends(db)
+):
     """Add updated indicator."""
     try:
         with db as conn:
@@ -120,7 +151,9 @@ def add_indicator(indicator: Indicator, db=Depends(db)):
     },
     response_model=Message,
 )
-def delete_indicator(indicator: Indicator, db=Depends(db)):
+def delete_indicator(
+    username: Annotated[str, Depends(basic_auth)], indicator: Indicator, db=Depends(db)
+):
     """Delete an updated indicator (in case one was mistakenly added)."""
 
     try:
