@@ -1,0 +1,2 @@
+-r requirements_base.txt
+mypy==1.2.0
