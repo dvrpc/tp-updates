@@ -44,6 +44,7 @@ app.add_middleware(
         "http://linux3.dvrpc.org",
         "http://intranet.dvrpc.org",
         "http://staging.dvrpc.org",
+        "https://staging.dvrpc.org",
         "https://dvrpc.org",
         "https://www.dvrpc.org",
     ],
