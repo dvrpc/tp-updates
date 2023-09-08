@@ -42,6 +42,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://linux3.dvrpc.org",
+        "http://linux4.dvrpc.org",
         "http://intranet.dvrpc.org",
         "http://staging.dvrpc.org",
         "https://staging.dvrpc.org",
